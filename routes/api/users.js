@@ -1,24 +1,24 @@
-const express = require("express");
+const express = require('express');
 const router = express();
-const gravatar = require("gravatar");
-const bcrypt = require("bcryptjs");
-const jwt = require("jsonwebtoken");
-const passport = require("passport");
-const { secretOrKey } = require("../../config/keys");
+const gravatar = require('gravatar');
+const bcrypt = require('bcryptjs');
+const jwt = require('jsonwebtoken');
+const passport = require('passport');
+const { secretOrKey } = require('../../config/keys');
 
 //Load Input Validation
-const validateRegisterInput = require("../../validation/register");
-const validateLoginInput = require("../../validation/login");
+const validateRegisterInput = require('../../validation/register');
+const validateLoginInput = require('../../validation/login');
 
 // Load User Model
-const User = require("../../models/User");
+const User = require('../../models/User');
 
 /**
  * @route POST api/users/register
  * @description Register a new user
  * @access Public
  */
-router.post("/register", (req, res) => {
+router.post('/register', (req, res) => {
   const { errors, isValid } = validateRegisterInput(req.body);
 
   // Check validation
@@ -26,13 +26,13 @@ router.post("/register", (req, res) => {
 
   User.findOne({ email: req.body.email }).then(user => {
     if (user) {
-      errors.email = "User with that email already exists";
+      errors.email = 'User with that email already exists';
       return res.status(400).json({ errors });
     } else {
       const avatar = gravatar.url(req.body.email, {
-        s: "200", // Size
-        r: "pg", // Rating
-        d: "mm" // default
+        s: '200', // Size
+        r: 'pg', // Rating
+        d: 'mm' // default
       });
 
       const newUser = new User({
@@ -61,7 +61,7 @@ router.post("/register", (req, res) => {
  * @description Login User / Return JWT Token
  * @access Public
  */
-router.post("/login", (req, res) => {
+router.post('/login', (req, res) => {
   const { errors, isValid } = validateLoginInput(req.body);
 
   // Check validation
@@ -73,7 +73,7 @@ router.post("/login", (req, res) => {
   User.findOne({ email }).then(user => {
     // Check for user
     if (!user) {
-      errors.email = "User not found";
+      errors.email = 'User not found';
       return res.status(404).json(errors);
     }
 
@@ -83,7 +83,7 @@ router.post("/login", (req, res) => {
         // User Matched
         const payload = { id: user.id, name: user.name, avatar: user.avatar }; // Create JWT payload
         // Sign Token
-        jwt.sign(payload, secretOrKey, { expiresIn: "1 day" }, (err, token) => {
+        jwt.sign(payload, secretOrKey, { expiresIn: '1 day' }, (err, token) => {
           if (err) throw err;
           else
             res.json({
@@ -92,7 +92,7 @@ router.post("/login", (req, res) => {
             });
         });
       } else {
-        errors.password = "Incorrect password";
+        errors.password = 'Incorrect password';
         return res.status(400).json(errors);
       }
     });
@@ -105,8 +105,8 @@ router.post("/login", (req, res) => {
  * @access Private
  */
 router.get(
-  "/current",
-  passport.authenticate("jwt", { session: false }),
+  '/current',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     res.json({
       id: req.user.id,

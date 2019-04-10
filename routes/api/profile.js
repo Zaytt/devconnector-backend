@@ -1,15 +1,16 @@
-const express = require("express");
+const express = require('express');
 const router = express();
-const mongoose = require("mongoose");
-const passport = require("passport");
+const mongoose = require('mongoose');
+const passport = require('passport');
 
-const Profile = require("../../models/Profile");
-const User = require("../../models/User");
+const Profile = require('../../models/Profile');
+const User = require('../../models/User');
 
 // Load Validation
-const validateProfileInput = require("../../validation/profile");
-const validateExperienceInput = require("../../validation/experience");
-const validateEducationInput = require("../../validation/education");
+const validateProfileInput = require('../../validation/profile');
+const validateExperienceInput = require('../../validation/experience');
+const validateEducationInput = require('../../validation/education');
+const urlPrefix = require('../../validation/url-prefix');
 
 /**
  * @route GET api/profile
@@ -17,17 +18,17 @@ const validateEducationInput = require("../../validation/education");
  * @access Private
  */
 router.get(
-  "/",
-  passport.authenticate("jwt", { session: false }),
+  '/',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     const errors = {};
     // Look for current user's profile
     Profile.findOne({ user: req.user.id })
-      .populate("u ser", ["name", "avatar"])
+      .populate('user', ['name', 'avatar'])
       .then(profile => {
         if (!profile) {
           // No profile found
-          errors.noprofile = "There is no profile for this user";
+          errors.noprofile = 'There is no profile for this user';
           res.status(404).json(errors);
         } else {
           // Profile found
@@ -43,21 +44,21 @@ router.get(
  * @description Get a profile by user ID
  * @access Public
  */
-router.get("/user/:user_id", (req, res) => {
+router.get('/user/:user_id', (req, res) => {
   const errors = {};
 
   Profile.findOne({ user: req.params.user_id })
-    .populate("user", ["name", "avatar"])
+    .populate('user', ['name', 'avatar'])
     .then(profile => {
       if (!profile) {
-        errors.noprofile = "There is no profile for this user";
+        errors.noprofile = 'There is no profile for this user';
         res.status(404).json(errors);
       } else {
         res.json(profile);
       }
     })
     .catch(err =>
-      res.status(404).json({ profile: "There is no profile for this user" })
+      res.status(404).json({ profile: 'There is no profile for this user' })
     );
 });
 
@@ -66,21 +67,21 @@ router.get("/user/:user_id", (req, res) => {
  * @description Get profile by handle
  * @access Public
  */
-router.get("/handle/:handle", (req, res) => {
+router.get('/handle/:handle', (req, res) => {
   const errors = {};
 
   Profile.findOne({ handle: req.params.handle })
-    .populate("user", ["name", "avatar"])
+    .populate('user', ['name', 'avatar'])
     .then(profile => {
       if (!profile) {
-        errors.noprofile = "There is no profile for this handle";
+        errors.noprofile = 'There is no profile for this handle';
         res.status(404).json(errors);
       } else {
         res.json(profile);
       }
     })
     .catch(err =>
-      res.status(404).json({ noprofile: "There is no profile for this handle" })
+      res.status(404).json({ noprofile: 'There is no profile for this handle' })
     );
 });
 
@@ -89,20 +90,20 @@ router.get("/handle/:handle", (req, res) => {
  * @description Get all profiles
  * @access Public
  */
-router.get("/all", (req, res) => {
+router.get('/all', (req, res) => {
   let errors = {};
   Profile.find()
-    .populate("user", ["name", "avatart"])
+    .populate('user', ['name', 'avatar'])
     .then(profiles => {
       if (!profiles) {
-        errors.noprofiles = "There are no profiles";
+        errors.noprofiles = 'There are no profiles';
         res.status(404).json({ errors });
       } else {
         res.json(profiles);
       }
     })
     .catch(err => {
-      res.status(404).json({ noprofile: "There are no profiles" });
+      res.status(404).json({ noprofile: 'There are no profiles' });
     });
 });
 
@@ -112,8 +113,8 @@ router.get("/all", (req, res) => {
  * @access Private
  */
 router.post(
-  "/",
-  passport.authenticate("jwt", { session: false }),
+  '/',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     const { errors, isValid } = validateProfileInput(req.body);
 
@@ -126,7 +127,9 @@ router.post(
     profileFields.user = req.user.id;
     if (req.body.handle) profileFields.handle = req.body.handle;
     if (req.body.company) profileFields.company = req.body.company;
-    if (req.body.website) profileFields.website = req.body.website;
+    if (req.body.website) {
+      profileFields.website = urlPrefix(req.body.website);
+    }
     if (req.body.location) profileFields.location = req.body.location;
     if (req.body.bio) profileFields.bio = req.body.bio;
     if (req.body.status) profileFields.status = req.body.status;
@@ -134,7 +137,7 @@ router.post(
       profileFields.githubusername = req.body.githubusername;
     // Skills - Split into an array
     if (typeof req.body.skills != undefined) {
-      profileFields.skills = req.body.skills.split(",");
+      profileFields.skills = req.body.skills.split(',');
     }
     // Social
     profileFields.social = {};
@@ -159,7 +162,7 @@ router.post(
         // Check if handle exists
         Profile.findOne({ handle: profileFields.handle }).then(profile => {
           if (profile) {
-            errors.handle = "That handle already exists";
+            errors.handle = 'That handle already exists';
             res.status(400).json(errors);
           } else {
             // Save profile
@@ -180,8 +183,8 @@ router.post(
  */
 
 router.post(
-  "/experience",
-  passport.authenticate("jwt", { session: false }),
+  '/experience',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     Profile.findOne({ user: req.user.id }).then(profile => {
       // Validate data
@@ -217,8 +220,8 @@ router.post(
  */
 
 router.post(
-  "/education",
-  passport.authenticate("jwt", { session: false }),
+  '/education',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     Profile.findOne({ user: req.user.id }).then(profile => {
       // Validate data
@@ -254,8 +257,8 @@ router.post(
  */
 
 router.delete(
-  "/experience/:exp_id",
-  passport.authenticate("jwt", { session: false }),
+  '/experience/:exp_id',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     Profile.findOne({ user: req.user.id })
       .then(profile => {
@@ -282,8 +285,8 @@ router.delete(
  */
 
 router.delete(
-  "/education/:edu_id",
-  passport.authenticate("jwt", { session: false }),
+  '/education/:edu_id',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     Profile.findOne({ user: req.user.id })
       .then(profile => {
@@ -309,8 +312,8 @@ router.delete(
  * @access Private
  */
 router.delete(
-  "/",
-  passport.authenticate("jwt", { session: false }),
+  '/',
+  passport.authenticate('jwt', { session: false }),
   (req, res) => {
     Profile.findOneAndRemove({ user: req.user.id })
       .then(() => {
